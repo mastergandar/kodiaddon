@@ -1,1 +1,14 @@
 1.0.0 Initial Release
+
+2.0.0
+Ported to Python 3 (Kodi 19 Matrix and newer)
+Use script.module.beautifulsoup4 instead of bundled Python 2 bs4
+
+
+2.0.1
+Removed script.module.simple.downloader dependency (not available for Kodi 19+), downloads are built in
+Code runs on both Python 2 and 3, separate zip for Kodi 17/18
+
+2.0.2
+Send a browser User-Agent (sites answered HTTP 403 to the default Python one)
+Removed UTF-8 BOM from addon.xml

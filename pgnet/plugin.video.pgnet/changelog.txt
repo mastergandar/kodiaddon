@@ -3,3 +3,17 @@
 1.0.1
 Fixed Next List
 Added Categories list and browsing videos
+
+2.0.0
+Ported to Python 3 (Kodi 19 Matrix and newer)
+Switched from urlresolver to resolveurl
+Use script.module.beautifulsoup4 instead of bundled Python 2 bs4
+
+
+2.0.1
+script.module.resolveurl is now optional (it is not in the official Kodi repository)
+Code runs on both Python 2 and 3, separate zip for Kodi 17/18
+
+2.0.2
+Send a browser User-Agent (sites answered HTTP 403 to the default Python one)
+Removed UTF-8 BOM from addon.xml
