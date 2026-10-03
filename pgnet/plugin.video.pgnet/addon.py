@@ -1,8 +1,19 @@
+from __future__ import print_function
 import sys
-from urllib.parse import parse_qs, urlencode
-from urllib.request import urlopen
+try:
+    from urllib.parse import parse_qs, urlencode
+    from urllib.request import urlopen
+except ImportError:
+    # Python 2 (Kodi 18 and older)
+    from urlparse import parse_qs
+    from urllib import urlencode
+    from urllib2 import urlopen
 import xbmc, xbmcgui, xbmcaddon, xbmcplugin
-import resolveurl
+try:
+    import resolveurl
+except ImportError:
+    # resolveurl is optional: without it direct video links are played as is
+    resolveurl = None
 import re
 from bs4 import BeautifulSoup
 
@@ -25,7 +36,13 @@ def build_url(query):
 def resolve_url(url):
     duration=7500   #in milliseconds
     message = "Cannot Play URL"
-    stream_url = resolveurl.HostedMediaFile(url=url).resolve()
+    if resolveurl is None:
+        return url
+    hosted = resolveurl.HostedMediaFile(url=url)
+    # No resolver for this host means it is a direct link, play it as is
+    if not hosted.valid_url():
+        return url
+    stream_url = hosted.resolve()
     # If urlresolver returns false then the video url was not resolved.
     if not stream_url:
         dialog = xbmcgui.Dialog()

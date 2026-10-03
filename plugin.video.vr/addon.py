@@ -1,15 +1,18 @@
+from __future__ import print_function
 import sys
-from urllib.parse import parse_qs, urlencode
-from urllib.request import urlopen
-import xbmc, xbmcgui, xbmcaddon, xbmcplugin
+try:
+    from urllib.parse import parse_qs, urlencode
+    from urllib.request import urlopen
+except ImportError:
+    # Python 2 (Kodi 18 and older)
+    from urlparse import parse_qs
+    from urllib import urlencode
+    from urllib2 import urlopen
+import xbmc, xbmcgui, xbmcaddon, xbmcplugin, xbmcvfs
 import subprocess
 #import resolveurl
 import re
 from bs4 import BeautifulSoup
-import SimpleDownloader as downloader
-
-
-downloader = downloader.SimpleDownloader()
 
 
 base_url = sys.argv[0]
@@ -100,6 +103,41 @@ def getCatLinks(url,selector):
         links.append({'href': domainurl + link.get('href'),'title':link.text})
     #print(links)
     return links;
+
+def download_video(url):
+    folder = xbmcgui.Dialog().browse(3, 'Download to', 'files')
+    if not folder:
+        return
+    if not folder.endswith(('/', '\\')):
+        folder += '/'
+    fileName = url.split('?')[0].split('/')[-1] or 'video.mp4'
+    dest = folder + fileName
+
+    progress = xbmcgui.DialogProgress()
+    progress.create('Download', fileName)
+    response = urlopen(url)
+    total = int(response.headers.get('Content-Length') or 0)
+    done = 0
+    out = xbmcvfs.File(dest, 'w')
+    try:
+        while True:
+            chunk = response.read(1024 * 1024)
+            if not chunk:
+                break
+            out.write(bytearray(chunk))
+            done += len(chunk)
+            if total:
+                progress.update(int(done * 100 / total))
+            if progress.iscanceled():
+                break
+    finally:
+        out.close()
+        progress.close()
+
+    if progress.iscanceled():
+        xbmcvfs.delete(dest)
+    else:
+        xbmcgui.Dialog().notification('Download', 'Saved ' + fileName, _icon)
 
 def copy2Clip(txt):
     cmd = 'echo '+txt.strip()+ ' | clip'
@@ -226,8 +264,7 @@ elif mode[0] == 'play':
 
 elif mode[0] == 'download':
     link = args['link'][0]
-    params = { "url": link, "download_path": "/tmp" }
-    downloader.download("video.mp4", params)
+    download_video(link)
 
 elif mode[0] == 'copy':
     link = args['link'][0]
