@@ -1,1 +1,5 @@
 1.0.0 Initial Release
+
+2.0.0
+Ported to Python 3 (Kodi 19 Matrix and newer)
+Use script.module.beautifulsoup4 instead of bundled Python 2 bs4

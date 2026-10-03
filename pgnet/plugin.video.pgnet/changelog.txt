@@ -3,3 +3,8 @@
 1.0.1
 Fixed Next List
 Added Categories list and browsing videos
+
+2.0.0
+Ported to Python 3 (Kodi 19 Matrix and newer)
+Switched from urlresolver to resolveurl
+Use script.module.beautifulsoup4 instead of bundled Python 2 bs4
