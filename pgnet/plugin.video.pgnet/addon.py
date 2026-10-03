@@ -1,13 +1,13 @@
 from __future__ import print_function
 import sys
 try:
-    from urllib.parse import parse_qs, urlencode
-    from urllib.request import urlopen
+    from urllib.parse import parse_qs, urlencode, quote
+    from urllib.request import Request, urlopen
 except ImportError:
     # Python 2 (Kodi 18 and older)
     from urlparse import parse_qs
-    from urllib import urlencode
-    from urllib2 import urlopen
+    from urllib import urlencode, quote
+    from urllib2 import Request, urlopen
 import xbmc, xbmcgui, xbmcaddon, xbmcplugin
 try:
     import resolveurl
@@ -29,6 +29,19 @@ _addon = xbmcaddon.Addon()
 _icon = _addon.getAddonInfo('icon')
 
 
+
+# Sites reject the default Python-urllib User-Agent with HTTP 403
+USER_AGENT = ('Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 '
+              '(KHTML, like Gecko) Chrome/129.0 Mobile Safari/537.36')
+
+def open_url(url):
+    return urlopen(Request(url, headers={'User-Agent': USER_AGENT}))
+
+def with_user_agent(url):
+    # Kodi player reads request headers after '|'
+    if '|' in url:
+        return url
+    return url + '|User-Agent=' + quote(USER_AGENT)
 
 def build_url(query):
     return base_url + '?' + urlencode(query)
@@ -61,14 +74,14 @@ def play_video(path):
     vid_url = path
     stream_url = resolve_url(vid_url)
     if stream_url:
-        play_item.setPath(stream_url)
+        play_item.setPath(with_user_agent(stream_url))
     # Pass the item to the Kodi player.
     xbmcplugin.setResolvedUrl(addon_handle, True, listitem=play_item)
 ##############
 def parseHTML(url=''):
     #connect to a URL
     #website = urlopen('http://m.perfectgirls.net/gal/497235/Astonishing_teacher_is_always_in_the_mood_to_fuck_her_students__if_no_one_is_watching_them')
-    website = urlopen(url)
+    website = open_url(url)
 
     #read html code
     html = website.read()
@@ -86,7 +99,7 @@ def parseHTML(url=''):
     return vdolist        
 ###########
 def getLinks(url,selector):
-    website = urlopen(url)
+    website = open_url(url)
     #read html code
     html = website.read()
     soup = BeautifulSoup(html, 'html.parser')
@@ -99,7 +112,7 @@ def getLinks(url,selector):
     return links;
 
 def getCatLinks(url,selector):
-    website = urlopen(url)
+    website = open_url(url)
     #read html code
     html = website.read()
     soup = BeautifulSoup(html, 'html.parser')
