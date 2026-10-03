@@ -1,0 +1,31 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build addon zips
+        run: |
+          mkdir -p dist
+          : > notes.md
+          for dir in pgnet/plugin.video.pgnet plugin.video.vr; do
+            id=$(basename "$dir")
+            version=$(sed -n 's/.*<addon [^>]*version="\([^"]*\)".*/\1/p' "$dir/addon.xml")
+            (cd "$(dirname "$dir")" && zip -qr "$GITHUB_WORKSPACE/dist/$id-$version.zip" "$id" -x '*.pyc' '*.pyo' '*/__pycache__/*')
+            printf '### %s %s\n\n```\n%s\n```\n\n' "$id" "$version" "$(cat "$dir/changelog.txt")" >> notes.md
+          done
+          ls -l dist
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/*.zip --title "$GITHUB_REF_NAME" --notes-file notes.md
